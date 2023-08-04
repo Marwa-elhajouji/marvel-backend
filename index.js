@@ -37,7 +37,7 @@ app.get("/char-comics/:characterID", async (req, res) => {
   try {
     const characterID = req.params.characterID
 
-    const apiKey = "ftXt3gE751FciBxj"
+    const apiKey = req.query.apiKey
     const response = await axios.get(
       `https://lereacteur-marvel-api.herokuapp.com/comics/${characterID}?apiKey=${apiKey}`
     )
@@ -55,7 +55,7 @@ app.get("/comics/:comicId", async (req, res) => {
   try {
     const comicId = req.params.comicId
 
-    const apiKey = "ftXt3gE751FciBxj"
+    const apiKey = req.query.apiKey
     const response = await axios.get(
       `https://lereacteur-marvel-api.herokuapp.com/comics?apiKey=${apiKey}`
     )
@@ -63,10 +63,8 @@ app.get("/comics/:comicId", async (req, res) => {
     const comics = response.data.results.filter((comic) => {
       return comic._id === comicId
     })
-    console.log("comics", comics)
+
     res.json(comics)
-    //    console.log(req.params);
-    // res.json(response.data)
   } catch (error) {
     res.status(500).json({ message: "Error Server" })
   }
@@ -78,7 +76,7 @@ app.get("/comics/:comicId", async (req, res) => {
 
 app.get("/characters", async (req, res) => {
   try {
-    const apiKey = "ftXt3gE751FciBxj"
+    const apiKey = req.query.apiKey
     const limit = req.query.limit || 100
     const skip = req.query.skip || 0
     const name = req.query.name || ""
@@ -98,11 +96,11 @@ app.get("/character/:characterId", async (req, res) => {
   try {
     const characterID = req.params.characterId
 
-    const apiKey = "ftXt3gE751FciBxj"
+    const apiKey = req.query.apiKey
     const response = await axios.get(
       `https://lereacteur-marvel-api.herokuapp.com/character/${characterID}?apiKey=${apiKey}`
     )
-    // console.log(response.data);
+
     res.status(200).json(response.data)
   } catch (error) {
     res.status(500).json({ message: "Error Server" })
