@@ -1,8 +1,9 @@
 const express = require("express")
 const cors = require("cors")
-const app = express()
+require("dotenv").config()
 const axios = require("axios")
-
+const app = express()
+app.use(cors())
 app.get("/", (req, res) => {
   try {
     return res.status(200).json({ message: "Welcome" })
@@ -11,102 +12,62 @@ app.get("/", (req, res) => {
   }
 })
 
-//comics ---------------------------
-// Route 1------------List of comics
-
-app.get("/comics", async (req, res) => {
-  try {
-    const apiKey = req.query.apiKey
-    const limit = req.query.limit || 100
-    const skip = req.query.skip || 0
-    const name = req.query.name || ""
-
-    const response = await axios.get(
-      `https://lereacteur-marvel-api.herokuapp.com/comics?apiKey=${apiKey}&limit=${limit}&skip=${skip}&name=${name}`
-    )
-
-    res.status(200).json(response.data)
-  } catch (error) {
-    res.status(500).json({ message: "Error server" })
-  }
-})
-
-// /Route 2----------List of comics with a specific character
-
-app.get("/char-comics/:characterID", async (req, res) => {
-  try {
-    const characterID = req.params.characterID
-
-    const apiKey = req.query.apiKey
-    const response = await axios.get(
-      `https://lereacteur-marvel-api.herokuapp.com/comics/${characterID}?apiKey=${apiKey}`
-    )
-    const comics = response.data.comics.map((comic) => {
-      return comic.title
-    })
-    res.status(200).json(comics)
-  } catch (error) {
-    res.status(500).json({ message: "Error Server" })
-  }
-})
-
-// Route 3------------Info about a  specific comic
-app.get("/comics/:comicId", async (req, res) => {
-  try {
-    const comicId = req.params.comicId
-
-    const apiKey = req.query.apiKey
-    const response = await axios.get(
-      `https://lereacteur-marvel-api.herokuapp.com/comics?apiKey=${apiKey}`
-    )
-
-    const comics = response.data.results.filter((comic) => {
-      return comic._id === comicId
-    })
-
-    res.json(comics)
-  } catch (error) {
-    res.status(500).json({ message: "Error Server" })
-  }
-})
-
-// Characters--------------------
-
-// Route 1----List of characters
+// Route 1 : Liste personnages
 
 app.get("/characters", async (req, res) => {
   try {
-    const apiKey = req.query.apiKey
-    const limit = req.query.limit || 100
-    const skip = req.query.skip || 0
-    const name = req.query.name || ""
+    let filters = ""
 
+    if (req.query.name) {
+      filters += `&name=${req.query.name}`
+    }
+    if (req.query.page) {
+      const skip = (req.query.page - 1) * 100
+      filters += `&skip=${skip}`
+    }
     const response = await axios.get(
-      `https://lereacteur-marvel-api.herokuapp.com/characters?apiKey=${apiKey}&limit=${limit}&skip=${skip}&name=${name}`
+      `https://lereacteur-marvel-api.herokuapp.com/characters?apiKey=${process.env.MARVEL_API_KEY}${filters}`
     )
-    res.status(200).json(response.data)
+    return res.status(200).json(response.data)
   } catch (error) {
-    res.status(500).json({ message: "Error Server" })
+    return res.status(400).json(error.message)
   }
 })
 
-// Route 2-------------Infos about a specific character
+// Route 2 : Rec comics avec id personnage
 
-app.get("/character/:characterId", async (req, res) => {
+app.get("/comics/:characterID", async (req, res) => {
   try {
-    const characterID = req.params.characterId
-
-    const apiKey = req.query.apiKey
     const response = await axios.get(
-      `https://lereacteur-marvel-api.herokuapp.com/character/${characterID}?apiKey=${apiKey}`
+      `https://lereacteur-marvel-api.herokuapp.com/comics/${req.params.characterID}?apiKey=${process.env.MARVEL_API_KEY}`
     )
-
-    res.status(200).json(response.data)
+    return res.status(200).json(response.data)
   } catch (error) {
-    res.status(500).json({ message: "Error Server" })
+    return res.status(400).json(error.message)
   }
 })
 
+//Route 3 : liste comics +filtres
+
+app.get("/comics", async (req, res) => {
+  try {
+    let filters = ""
+
+    if (req.query.title) {
+      filters += `&title=${req.query.title}`
+    }
+    if (req.query.page) {
+      const skip = (req.query.page - 1) * 100
+      filters += `&skip=${skip}`
+    }
+    const response = await axios.get(
+      `https://lereacteur-marvel-api.herokuapp.com/comics?apiKey=${process.env.MARVEL_API_KEY}${filters}`
+    )
+    return res.status(200).json(response.data)
+  } catch (error) {
+    return res.status(400).json(error.message)
+  }
+})
 app.all("*", (req, res) => {
   try {
     return res.status(404).json({ message: "Page not found" })
@@ -114,7 +75,7 @@ app.all("*", (req, res) => {
     return res.status(400).json(error.message)
   }
 })
-
-app.listen(3000, () => {
-  console.log("Server has Started")
+const PORT = process.env.PORT
+app.listen(PORT, () => {
+  console.log("Server has Started" + PORT)
 })
